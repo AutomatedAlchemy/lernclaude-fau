@@ -24,8 +24,8 @@ This is the FAU variant of lernclaude. It adds the NHR@FAU gateway backend
 ## Install
 
 ```bash
-git clone https://github.com/AutomatedAlchemy/lernclaude.git
-cd lernclaude
+git clone https://github.com/AutomatedAlchemy/lernclaude-fau.git
+cd lernclaude-fau
 python3 main.py          # menu; first entry is "neuen Kurs anlegen"
 python3 main.py --install # desktop icon + `lernen` alias
 ```
