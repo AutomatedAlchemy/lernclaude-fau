@@ -34,13 +34,13 @@ import sys
 
 # --advertise must answer before any heavy import (installer 5s timeout).
 PARENT_METADATA = {
-    "name": "lernclaude",
+    "name": "lernclaude (FAU)",
     "capability": "agent",
     "domain": "study-prep",
     "category": "personal",
-    "desktop_file": "lernclaude.desktop",
+    "desktop_file": "lernclaude-fau.desktop",
     "icon": "accessories-text-editor",
-    "desc": "Spawn a Claude session that runs a personalized exam-prep Lern-Loop in a workspace",
+    "desc": "Spawn a Claude session that runs a personalized exam-prep Lern-Loop in a workspace (FAU variant: NHR@FAU gateway backend)",
     "terminal": False,
     "args": [],
     "tags": ["CLI", "Icon"],
