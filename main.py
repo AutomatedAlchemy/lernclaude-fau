@@ -183,8 +183,9 @@ def _set_medium(medium: str) -> str:
 
 
 # ----------------------------------------------------------------------------
-# models: picked in the menu (key `o`) or with --set-model
+# backend and models: autoselected from the model choice (menu key `o`)
 # ----------------------------------------------------------------------------
+_BACKENDS = ("claude", "fauclaude")
 _ANTHROPIC_MODELS = ("opus", "sonnet", "fable")
 _ANTHROPIC_MODEL_LABELS = {
     "opus": "Opus",
@@ -196,17 +197,74 @@ _ANTHROPIC_MODEL_LABELS = {
 # the menu with `o` / `e` and persisted, so it is visible rather than derived.
 DEFAULT_MODEL = "opus"
 DEFAULT_EFFORT = "medium"
+_DEFAULT_FAU_MODELS = (
+    "deepseek-ai/DeepSeek-V4-Flash-0731",
+    "deepseek-ai/DeepSeek-V4-Flash",
+    "gpt-oss-120b",
+    "Qwen/Qwen3.6-35B-A3B-FP8",
+    "RedHatAI/Mistral-Small-3.2-24B-Instruct-2506-FP8",
+    "RedHatAI/gemma-4-31B-it-FP8-block",
+    "GaleneAI/Magistral-Small-2509-FP8-Dynamic",
+    "google/gemma-4-E4B-it",
+    "Microsoft/Phi-4-mini-instruct",
+    "ibm-granite/granite-4.1-3b",
+    "lightonai/LightOnOCR-2-1B",
+    "Qwen/Qwen3-Embedding-4B",
+    "intfloat/multilingual-e5-large",
+    "llamaindex/vdr-2b-multi-v1",
+)
 _EFFORTS = ("low", "medium", "high", "xhigh", "max")
 _EFFORT_LABELS = {e: e for e in _EFFORTS}
 
 
+def _discover_fau_models() -> list[str]:
+    """Retrieve currently hosted FAU LLM gateway models with offline fallback.
+
+    Attempts to invoke the local ``faullm models`` entry point. If unavailable,
+    unresponsive, or offline, falls back gracefully to ``_DEFAULT_FAU_MODELS``.
+
+    Returns:
+        List of hosted model identifier strings.
+    """
+    faullm_script_candidates = [
+        SCRIPT_DIR.parents[1] / "MatSci" / "NHR" / "tools" / "faullm" / "main.py",
+        Path.home() / "Synced" / "repos" / "MatSci" / "NHR" / "tools" / "faullm" / "main.py",
+    ]
+    faullm_script = next((candidate for candidate in faullm_script_candidates if candidate.is_file()), None)
+    if not faullm_script:
+        return list(_DEFAULT_FAU_MODELS)
+
+    py_candidates = [
+        SCRIPT_DIR.parents[1] / "prob_ubuntu_environment" / "Py3EnvShare" / "bin" / "python3",
+        Path.home() / "Synced" / "repos" / "prob_ubuntu_environment" / "Py3EnvShare" / "bin" / "python3",
+    ]
+    py_executable = next((candidate for candidate in py_candidates if candidate.is_file()), Path(sys.executable))
+
+    try:
+        result = subprocess.run(
+            [str(py_executable), str(faullm_script), "models"],
+            capture_output=True, text=True, timeout=2,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            models = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+            if models:
+                return models
+    except Exception:
+        pass
+    return list(_DEFAULT_FAU_MODELS)
+
+
 def _available_models() -> list[str]:
-    """Return all selectable models.
+    """Return all selectable models (Anthropic + FAU models).
 
     Returns:
         Ordered list of unique model identifier strings.
     """
     models: list[str] = list(_ANTHROPIC_MODELS)
+    fau_models = _discover_fau_models()
+    for model_identifier in fau_models:
+        if model_identifier not in models:
+            models.append(model_identifier)
     current = _current_model()
     if current and current not in models:
         models.append(current)
@@ -222,24 +280,100 @@ def _model_label(model: str) -> str:
     Returns:
         Formatted display label.
     """
-    return _ANTHROPIC_MODEL_LABELS.get(model, model)
+    if model in _ANTHROPIC_MODEL_LABELS:
+        return _ANTHROPIC_MODEL_LABELS[model]
+    clean_name = model.split("/")[-1] if "/" in model else model
+    return f"fau: {clean_name}"
+
+
+def _backend_for_model(model: str) -> str:
+    """Autoselect the backend launcher based on the chosen model.
+
+    Args:
+        model: The selected model identifier string.
+
+    Returns:
+        'claude' for native Anthropic models, 'fauclaude' for gateway models.
+    """
+    if model in _ANTHROPIC_MODELS:
+        return "claude"
+    return "fauclaude"
+
+
+def _current_backend() -> str:
+    """Determine the active LLM backend launcher, autoselected from the current model.
+
+    Returns:
+        The active backend identifier string (``"claude"`` or ``"fauclaude"``).
+    """
+    if os.environ.get("LERNCLAUDE_BACKEND"):
+        raw_env = os.environ["LERNCLAUDE_BACKEND"].strip().lower()
+        if raw_env in _BACKENDS:
+            return raw_env
+    return _backend_for_model(_current_model())
+
+
+def _resolve_fauclaude_cmd() -> list[str]:
+    """Resolve the command-line argument tokens required to launch fauclaude.
+
+    Looks up ``LERNCLAUDE_FAUCLAUDE_CMD`` or ``FAUCLAUDE_CMD`` first, then checks
+    if ``fauclaude`` exists on ``PATH``, then inspects standard repository
+    locations for ``fauclaude/main.py`` and associated Python environments.
+
+    Returns:
+        List of command argument strings used to spawn fauclaude.
+    """
+    custom_command = os.environ.get("LERNCLAUDE_FAUCLAUDE_CMD") or os.environ.get("FAUCLAUDE_CMD")
+    if custom_command:
+        import shlex
+        return shlex.split(custom_command)
+
+    path_executable = shutil.which("fauclaude")
+    if path_executable:
+        return [path_executable]
+
+    candidate_scripts: list[Path] = [
+        SCRIPT_DIR.parents[1] / "MatSci" / "NHR" / "fauclaude" / "main.py",
+        Path.home() / "Synced" / "repos" / "MatSci" / "NHR" / "fauclaude" / "main.py",
+    ]
+    resolved_script = next((candidate for candidate in candidate_scripts if candidate.is_file()), None)
+    if resolved_script is None:
+        return ["fauclaude"]
+
+    candidate_interpreters: list[Path] = []
+    if os.environ.get("CLAUDE_FAU_PYTHON"):
+        candidate_interpreters.append(Path(os.path.expanduser(os.environ["CLAUDE_FAU_PYTHON"])))
+    candidate_interpreters.extend([
+        SCRIPT_DIR.parents[1] / "prob_ubuntu_environment" / "Py3EnvShare" / "bin" / "python3",
+        Path.home() / "Synced" / "repos" / "prob_ubuntu_environment" / "Py3EnvShare" / "bin" / "python3",
+    ])
+    resolved_python = next((candidate for candidate in candidate_interpreters if candidate.is_file()), Path(sys.executable))
+    return [str(resolved_python), str(resolved_script)]
 
 
 def _backend_cmd() -> list[str]:
-    """Return the base command tokens for the launcher.
+    """Return the base command tokens for the active backend.
 
     Returns:
         List of strings constituting the base executable command.
     """
+    backend = _current_backend()
+    if backend == "fauclaude":
+        return _resolve_fauclaude_cmd()
     return ["claude"]
 
 
 def _backend_model_args() -> list[str]:
-    """Generate model and effort CLI argument flags.
+    """Generate model and effort CLI argument flags for the active backend.
 
     Returns:
         List of argument flag strings.
     """
+    backend = _current_backend()
+    if backend == "fauclaude":
+        # fauclaude picks its own default when a flag is absent, but the pin is
+        # always concrete now, so both are always passed.
+        return ["--model", _current_model(), "--effort", _current_effort()]
     return [
         "--model", _select_model(),
         "--effort", _select_effort(),
@@ -247,14 +381,9 @@ def _backend_model_args() -> list[str]:
 
 
 def _current_model() -> str:
-    """The picked model from the registry, else the default.
-
-    A registry written by an older version may still name a model this build
-    does not know. Such a value falls back to the default instead of being
-    passed on to a launch that would reject it.
-    """
+    """The picked model from the registry, else the default."""
     raw = str(_load_registry().get("model") or "").strip()
-    return raw if raw in _ANTHROPIC_MODELS else DEFAULT_MODEL
+    return raw if raw else DEFAULT_MODEL
 
 
 def _current_effort() -> str:
@@ -591,9 +720,9 @@ def do_register(path: str) -> int:
 # workspace registry (./data/registry.json): known courses + default
 # ----------------------------------------------------------------------------
 # Tool-local, not ~/.config: the registry lives inside the tool's own directory
-# (anchored to SCRIPT_DIR) so it lives beside the tool and travels with the
-# checkout, which keeps the course list the same on every host. See CLAUDE.md
-# § "Tool-local state". gitignored so the mutable file never dirties git.
+# (anchored to SCRIPT_DIR) so it rides the Syncthing-replicated repo tree and the
+# course list is the same on every host. See tools/CLAUDE.md § "Tool-local state".
+# gitignored (tools/.gitignore) so the mutable file never dirties git.
 def _registry_path() -> Path:
     """Read from env each call so tests can redirect it after import."""
     return Path(os.path.expanduser(
@@ -1752,7 +1881,7 @@ def main() -> int:
                         help="set the working medium the sessions use (xournalpp | board); "
                              "also toggled in the menu with `m`")
     parser.add_argument("--set-model", metavar="MODEL", dest="set_model", default=None,
-                        help="set the model the sessions launch with (opus, sonnet, fable); "
+                        help="set the model the sessions launch with (opus, sonnet, fable, or any FAU model); "
                              "also switched in the menu with `o`")
     parser.add_argument("--set-effort", metavar="EFFORT", dest="set_effort", default=None,
                         choices=list(_EFFORTS),

@@ -309,11 +309,15 @@ bypasses `tier_effort` on purpose: choosing `high` in the menu on a Max host mus
 give high, or the switch would be a lie. The menu label for the medium row reads
 "Userspace"; the registry key, the templates and the code all still say `medium`.
 
-The `o` cycle lists the Anthropic models (`_ANTHROPIC_MODELS`), and
-`_available_models` appends whatever the registry currently holds so a pinned
-value stays visible. `_current_model` accepts only a known name: a registry
-written by an older build may still carry a model this one does not know, and
-that value falls back to `DEFAULT_MODEL` instead of reaching a launch.
+The backend follows the model, there is no separate switch (the `b` key and
+`--set-backend` were removed 2026-09-11). The `o` cycle lists the Anthropic
+models and then the models hosted on the NHR@FAU LLM Gateway (`faullm models`,
+with `_DEFAULT_FAU_MODELS` as the offline fallback). `_backend_for_model` maps
+an Anthropic name to `claude` and anything else to `fauclaude`;
+`LERNCLAUDE_BACKEND` still overrides that for one launch. For `fauclaude` the
+launcher resolves the command via `PATH`, `LERNCLAUDE_FAUCLAUDE_CMD`, or the
+sibling repo path (`MatSci/NHR/fauclaude/main.py`), and passes the picked model
+and effort through — both are always concrete now that `auto` is gone.
 
 ## Commits
 
@@ -340,7 +344,7 @@ that value falls back to `DEFAULT_MODEL` instead of reaching a launch.
 | `tier.py` | vendored subscription-tier → model/effort mapping; **vendored, unused** — no longer imported |
 | `templates/LERNLOOP_TEMPLATE.md` | the Lern-Loop procedure stamped into new workspaces |
 | `templates/medium_*.md` | per-medium mechanics, appended to the system prompt |
-| `test_lernclaude.py` | 17 offline tests — behaviour only, no network, no launch |
+| `test_lernclaude.py` | 18 offline tests — behaviour only, no network, no launch |
 | `requirements.txt` | empty by design; stdlib only |
 
 ## Gotchas
@@ -363,7 +367,7 @@ that value falls back to `DEFAULT_MODEL` instead of reaching a launch.
 ## Tests
 
 ```bash
-python3 -m pytest -q     # 17 tests, offline
+python3 -m pytest -q     # 18 tests, offline
 ```
 
 Tests load `main.py` under a unique module name via `importlib` rather than

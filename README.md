@@ -8,6 +8,10 @@ launcher encodes no study procedure: about 2000 lines that pick a folder, pick a
 model and send a "let's study" trigger, so you improve the loop by editing a
 workspace's `CLAUDE.md`, not this code. Tested on Linux with KDE.
 
+This is the FAU variant of lernclaude. It adds the NHR@FAU gateway backend
+(`fauclaude`, `fau:` models); the public base is
+<https://github.com/AutomatedAlchemy/lernclaude>.
+
 > **The tool speaks German** — prompts, workspace template, menu. The loop itself
 > is language-agnostic: [docs/workspace.md](docs/workspace.md#using-it-in-another-language).
 
@@ -103,6 +107,8 @@ All optional.
 | `LERNCLAUDE_DEFAULT_WORKSPACE` | Override the registered default for one launch |
 | `LERNCLAUDE_ROOT` | Where guided onboarding starts searching (default: `$HOME`) |
 | `LERNCLAUDE_EXAMS` | Markdown file with your exam-date table (banner off when unset; registry key `exams_file` does the same) |
+| `LERNCLAUDE_BACKEND` | Override the active backend for one launch (`claude` \| `fauclaude`) |
+| `LERNCLAUDE_FAUCLAUDE_CMD` | Explicit command / arguments to launch fauclaude |
 | `LERNCLAUDE_MEDIUM` | Override the working medium for one launch (`xournalpp` \| `board`) |
 
 Registered courses live in the gitignored `data/registry.json`, in the tool's own
@@ -112,8 +118,13 @@ course list on every machine.
 Sessions launch on **Opus at `medium` effort**. Medium is deliberate: the loop is
 interactive tutoring, where latency is felt more than reasoning depth helps. `o`
 and `e` in the menu (or `--set-model` / `--set-effort`) change model (Opus |
-Sonnet | Fable) and effort (low | medium | high | xhigh | max); the pick is used
-as chosen and persists in the registry.
+Sonnet | Fable, then the NHR@FAU gateway models shown as `fau: <name>`) and
+effort (low | medium | high | xhigh | max); the pick is used as chosen and
+persists in the registry.
+
+Picking a `fau:` model launches through `fauclaude` instead of `claude`, with
+`LERNCLAUDE_BACKEND` forcing the launcher regardless of the model. That path
+needs an NHR@FAU account and the author's private `fauclaude` repo.
 
 A workspace itself is a normal folder with your material plus a `CLAUDE.md`.
 Onboarding stamps a minimal skeleton (`CLAUDE.md`, `todo.md`, `fehlermuster.md`,
@@ -123,7 +134,7 @@ overview contract and adding a course: [docs/workspace.md](docs/workspace.md).
 ## Tests and license
 
 ```bash
-python3 -m pytest -q          # 17 offline tests, no network, no launch
+python3 -m pytest -q          # 18 offline tests, no network, no launch
 ```
 
 MIT — see [LICENSE](LICENSE).

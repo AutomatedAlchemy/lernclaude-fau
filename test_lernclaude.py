@@ -41,7 +41,10 @@ def spawns(monkeypatch, tmp_path):
     monkeypatch.delenv("LERNCLAUDE_DEFAULT_WORKSPACE", raising=False)
     monkeypatch.delenv("LERNCLAUDE_MEDIUM", raising=False)
     monkeypatch.delenv("LERNCLAUDE_EXAMS", raising=False)
+    monkeypatch.delenv("LERNCLAUDE_BACKEND", raising=False)
+    monkeypatch.delenv("LERNCLAUDE_FAUCLAUDE_CMD", raising=False)
     monkeypatch.setenv("CLAUDE_TIER_OVERRIDE", "max")
+    monkeypatch.setattr(m, "_discover_fau_models", lambda: list(m._DEFAULT_FAU_MODELS))
     monkeypatch.setattr(m.os, "chdir", lambda d: rec.update(cwd=d))
     monkeypatch.setattr(m.os, "execvpe", lambda prog, argv, env: rec["exec"].append(argv))
     monkeypatch.setattr(m.subprocess, "Popen", lambda cmd, **k: rec["popen"].append(cmd))
@@ -143,18 +146,23 @@ def test_medium_choice_precedence(monkeypatch):
         assert (HERE / "templates" / f"medium_{medium}.md").is_file()
 
 
-def test_model_picker_and_registry_tolerance():
-    assert m._current_model() == m.DEFAULT_MODEL             # fresh registry
-    m._set_model("sonnet")
-    assert m._current_model() == "sonnet"
+def test_backend_autoselection_from_model(monkeypatch):
+    assert m._current_backend() == "claude"                  # default -> claude
+    m._set_model("opus")
+    assert m._current_backend() == "claude"
+    m._set_model("deepseek-ai/DeepSeek-V4-Flash-0731")
+    assert m._current_backend() == "fauclaude"               # FAU model -> fauclaude
+    m._set_model("gpt-oss-120b")
+    assert m._current_backend() == "fauclaude"
+    assert "fau: gpt-oss-120b" in m._model_label("gpt-oss-120b")
     assert m._model_label("opus") == "Opus"
     models = m._available_models()
-    assert set(m._ANTHROPIC_MODELS) <= set(models)
+    assert "opus" in models and "deepseek-ai/DeepSeek-V4-Flash-0731" in models
     assert "auto" not in models                              # removed 2026-09-16
-    # a model this build does not know (an old registry) falls back, never crashes
-    m._set_model("deepseek-ai/DeepSeek-V4-Flash-0731")
-    assert m._current_model() == m.DEFAULT_MODEL
-    assert m._backend_cmd() == ["claude"]
+    m._set_model("sonnet")
+    assert m._current_backend() == "claude"
+    monkeypatch.setenv("LERNCLAUDE_BACKEND", "fauclaude")
+    assert m._current_backend() == "fauclaude"               # env override wins
 
 
 def test_quickie_streak_arithmetic():
@@ -267,6 +275,31 @@ def test_launches_exec_one_interactive_session(tmp_path, monkeypatch, spawns):
     spawns["allow_popen"] = True
     m.launch(a)
     assert spawns["popen"][-1][:2] == ["konsole", "--workdir"] and "claude" in spawns["popen"][-1]
+
+
+def test_backend_fauclaude_launches(tmp_path, monkeypatch, spawns):
+    a, b = _courses(tmp_path, "A", "B")
+    m._set_model("deepseek-ai/DeepSeek-V4-Flash-0731")
+    monkeypatch.setenv("LERNCLAUDE_FAUCLAUDE_CMD", "fauclaude-custom --opt")
+    argv = m._build_argv(a)
+    assert argv[:2] == ["fauclaude-custom", "--opt"]
+    assert argv[argv.index("--model") + 1] == "deepseek-ai/DeepSeek-V4-Flash-0731"
+    # Both flags are always concrete now that `auto` is gone.
+    assert argv[argv.index("--effort") + 1] == m.DEFAULT_EFFORT
+    assert "--append-system-prompt" in argv
+
+    # explicit model and effort are passed through
+    m._set_model("gpt-oss-120b")
+    m._set_effort("high")
+    argv_explicit = m._build_argv(a)
+    assert argv_explicit[argv_explicit.index("--model") + 1] == "gpt-oss-120b"
+    assert argv_explicit[argv_explicit.index("--effort") + 1] == "high"
+
+    # launch execution
+    spawns["exec"].clear()
+    m.launch(a, inline=True)
+    assert len(spawns["exec"]) == 1
+    assert spawns["exec"][0][:2] == ["fauclaude-custom", "--opt"]
 
 
 # ---- prompts: orient, never re-encode the procedure ----------------------
