@@ -379,7 +379,7 @@ and effort through — both are always concrete now that `auto` is gone.
 | `tier.py` | vendored subscription-tier → model/effort mapping; **vendored, unused** — no longer imported |
 | `templates/LERNLOOP_TEMPLATE.md` | the Lern-Loop procedure stamped into new workspaces |
 | `templates/media/*.md` | per-medium mechanics, appended to the system prompt |
-| `test_lernclaude.py` | 24 offline tests — behaviour only, no network, no launch |
+| `test_lernclaude.py` | offline tests — behaviour only, no network, no launch |
 | `requirements.txt` | empty by design; stdlib only |
 
 ## Gotchas
@@ -402,7 +402,7 @@ and effort through — both are always concrete now that `auto` is gone.
 ## Tests
 
 ```bash
-python3 -m pytest -q     # 24 tests, offline
+python3 -m pytest -q     # offline
 ```
 
 Tests load `main.py` under a unique module name via `importlib` rather than

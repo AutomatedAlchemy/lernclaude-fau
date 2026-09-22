@@ -135,7 +135,7 @@ overview contract and adding a course: [docs/workspace.md](docs/workspace.md).
 ## Tests and license
 
 ```bash
-python3 -m pytest -q          # 18 offline tests, no network, no launch
+python3 -m pytest -q          # offline: no network, no launch
 ```
 
 MIT — see [LICENSE](LICENSE).
