@@ -1728,7 +1728,10 @@ def _model_selection_menu(
                 marker = " ▶ " if is_cursor_on_row else "   "
                 label = _model_label(model_identifier)
                 active_indicator = " ★ aktiv" if is_active_model else ""
-                line_text = f"{marker}{label}{active_indicator}"
+                backend_identifier = _backend_for_model(model_identifier)
+                backend_suffix = f"   [{backend_identifier}]"
+
+                line_text = f"{marker}{label}{active_indicator}{backend_suffix}"
 
                 if is_cursor_on_row:
                     row_attribute = color_palette["tutor"] | curses.A_BOLD
