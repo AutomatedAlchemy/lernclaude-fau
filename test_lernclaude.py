@@ -7,6 +7,7 @@ files, and the SSoT boundary. Wording of prompts is deliberately not pinned.
 Loads main.py under a unique module name (repo runs pytest in prepend-import
 mode with no __init__.py, so a bare `import main` would collide with siblings).
 """
+import curses
 import datetime
 import importlib.util
 import json
@@ -211,7 +212,7 @@ def test_cli_routes(tmp_path, monkeypatch, spawns):
     m._register_workspace(a); m._register_workspace(b)
     called = []
     for name in ("run_menu", "launch", "do_add", "_launch_tutor_choice", "_launch_quickie",
-                 "_launch_meta"):
+                 "_launch_meta", "_launch_gaertner"):
         monkeypatch.setattr(m, name, lambda *x, _n=name, **k: called.append(_n) or 0)
     cases = {
         (): "run_menu",
@@ -222,6 +223,9 @@ def test_cli_routes(tmp_path, monkeypatch, spawns):
         ("--meta", a, b): "_launch_meta",
         ("--meta",): None,              # nothing remembered yet (the stub above records nothing)
         ("--print-prompt", "--meta", a, b): None,
+        ("--gaertner",): "_launch_gaertner",
+        ("--gaertner", a): "_launch_gaertner",
+        ("--print-prompt", "--gaertner"): None,
         ("--dry-run",): None,           # inspection flags: no menu, no launch
         ("--print-prompt",): None,
         ("--register", str(tmp_path / "Neu")): None,
@@ -277,6 +281,21 @@ def test_launches_exec_one_interactive_session(tmp_path, monkeypatch, spawns):
     assert spawns["popen"][-1][:2] == ["konsole", "--workdir"] and "claude" in spawns["popen"][-1]
 
 
+def test_gaertner_sees_every_course_and_keeps_no_state(tmp_path, spawns):
+    """The Gärtner starts at the common root with every course's dossier, names
+    the focus, and neither registers a focus path nor counts anything."""
+    a, b, loose = _courses(tmp_path, "Physik", "Spanisch", "Alt")
+    m._register_workspace(a); m._register_workspace(b)
+    m._launch_gaertner(m._load_registry(), [b, loose], inline=True)
+    assert len(spawns["exec"]) == 1 and spawns["cwd"] == str(tmp_path)
+    opening = spawns["exec"][0][-1]
+    assert "-p" not in spawns["exec"][0] and a in opening and loose in opening
+    assert opening.index(b) < opening.index("<dossiers>")      # b is named as the focus
+    assert m.opening_message_gaertner([a, b], []).count(a) == 1  # no focus, no focus list
+    reg = m._load_registry()
+    assert loose not in reg["workspaces"] and "quickies" not in reg and "meta" not in reg
+
+
 def test_backend_fauclaude_launches(tmp_path, monkeypatch, spawns):
     a, b = _courses(tmp_path, "A", "B")
     m._set_model("deepseek-ai/DeepSeek-V4-Flash-0731")
@@ -317,6 +336,7 @@ def test_prompts_orient_without_reencoding_the_procedure(tmp_path, monkeypatch):
         "quickie": m._assemble_quickie_prompt([a, b]) + m.opening_message_quickie([a, b], 3, 7),
         "quickie-solo": m._assemble_quickie_prompt([a]) + m.opening_message_quickie([a], 0, 1),
         "meta": m._assemble_meta_prompt(a, [b]) + m.opening_message_meta(a, [b], 1, 2, 1),
+        "gaertner": m._assemble_gaertner_prompt() + m.opening_message_gaertner([a, b], [b]),
     }
     for name, text in texts.items():
         assert "CLAUDE.md" in text and "Heute:" in text, name
@@ -342,6 +362,8 @@ def test_prompts_orient_without_reencoding_the_procedure(tmp_path, monkeypatch):
     assert template_path not in texts["meta"]                # never the Meta's job either
     assert a in texts["meta"] and b in texts["meta"] and "2/30" in texts["meta"]
     assert "fehlermuster.md" in texts["meta"] and "nur im Ziel-Ordner" in texts["meta"]
+    assert a in texts["gaertner"] and "2/30" in texts["gaertner"]         # every dossier
+    assert "--unregister" in texts["gaertner"] and "registry.json" not in texts["gaertner"]
     monkeypatch.setenv("LERNCLAUDE_MEDIUM", "xournalpp")
     assert ".xopp" in m._assemble_prompt(a) and "get_canvas" not in m._assemble_prompt(a)
 
@@ -498,3 +520,133 @@ def test_exam_table_parsing(tmp_path, monkeypatch):
     assert rows[2][1] == "Di 12.01. 08:00" and rows[2][0] > 100   # January = next year
     f.write_text("| Fach | Termin |\n|---|---|\n| X | garbage |\n", encoding="utf-8")
     assert m.upcoming_exams() == []                           # fail into silence
+
+
+class MockCursesScreen:
+    """Mock curses standard screen for simulating terminal input and rendering."""
+
+    def __init__(
+        self,
+        simulated_key_sequence: list[int],
+        simulated_terminal_dimensions: tuple[int, int] = (24, 80),
+    ) -> None:
+        """Initialize mock curses screen with simulated input keys and geometry.
+
+        Args:
+            simulated_key_sequence: Queue of key codes to return on getch() calls.
+            simulated_terminal_dimensions: Simulated (height, width) screen dimensions.
+        """
+        self._key_sequence: list[int] = list(simulated_key_sequence)
+        self._terminal_dimensions: tuple[int, int] = simulated_terminal_dimensions
+        self.rendered_lines: list[tuple[int, int, str, int]] = []
+        self.erased: bool = False
+        self.refreshed: bool = False
+        self.timeout_delay: int | None = None
+
+    def erase(self) -> None:
+        """Simulate screen erase."""
+        self.erased = True
+
+    def refresh(self) -> None:
+        """Simulate screen refresh."""
+        self.refreshed = True
+
+    def getmaxyx(self) -> tuple[int, int]:
+        """Simulate returning terminal dimensions.
+
+        Returns:
+            Tuple of (height, width).
+        """
+        return self._terminal_dimensions
+
+    def addstr(self, y: int, x: int, text: str, attr: int = 0) -> None:
+        """Record rendered text line.
+
+        Args:
+            y: Vertical row coordinate.
+            x: Horizontal column coordinate.
+            text: Text to display.
+            attr: Display attributes bitmask.
+        """
+        self.rendered_lines.append((y, x, text, attr))
+
+    def getch(self) -> int:
+        """Return next key code from the simulated queue.
+
+        Returns:
+            Integer key code, or -1 if queue is exhausted.
+        """
+        if self._key_sequence:
+            return self._key_sequence.pop(0)
+        return -1
+
+    def timeout(self, delay: int) -> None:
+        """Record timeout setting.
+
+        Args:
+            delay: Delay in milliseconds, or -1 for blocking.
+        """
+        self.timeout_delay = delay
+
+
+def test_model_selection_menu_navigation_and_selection():
+    """Verify navigating down to next model and selecting with Enter key."""
+    palette: dict[str, int] = {"title": 0, "path": 0, "foot": 0, "tutor": 0, "star": 0}
+    models: list[str] = ["opus", "sonnet", "fable"]
+    # Start at 'opus', press KEY_DOWN, then Enter (10)
+    screen = MockCursesScreen([curses.KEY_DOWN, 10])
+    selected_model = m._model_selection_menu(screen, palette, models, "opus")
+    assert selected_model == "sonnet"
+
+
+def test_model_selection_menu_wraps_around_with_up_arrow():
+    """Verify up arrow from top of list wraps around to the last model."""
+    palette: dict[str, int] = {"title": 0, "path": 0, "foot": 0, "tutor": 0, "star": 0}
+    models: list[str] = ["opus", "sonnet", "fable"]
+    # Start at 'opus' (index 0), press KEY_UP, then Enter (13)
+    screen = MockCursesScreen([curses.KEY_UP, 13])
+    selected_model = m._model_selection_menu(screen, palette, models, "opus")
+    assert selected_model == "fable"
+
+
+def test_model_selection_menu_cancellation_preserves_current_model():
+    """Verify cancellation via Esc, Backspace, Left arrow, or q preserves current model."""
+    palette: dict[str, int] = {"title": 0, "path": 0, "foot": 0, "tutor": 0, "star": 0}
+    models: list[str] = ["opus", "sonnet", "fable"]
+
+    # Cancel with Escape (27)
+    esc_screen = MockCursesScreen([curses.KEY_DOWN, 27])
+    assert m._model_selection_menu(esc_screen, palette, models, "opus") == "opus"
+
+    # Cancel with Backspace (127)
+    bs_screen = MockCursesScreen([curses.KEY_DOWN, 127])
+    assert m._model_selection_menu(bs_screen, palette, models, "opus") == "opus"
+
+    # Cancel with Left Arrow (curses.KEY_LEFT)
+    left_screen = MockCursesScreen([curses.KEY_DOWN, curses.KEY_LEFT])
+    assert m._model_selection_menu(left_screen, palette, models, "opus") == "opus"
+
+    # Cancel with 'q'
+    q_screen = MockCursesScreen([curses.KEY_DOWN, ord("q")])
+    assert m._model_selection_menu(q_screen, palette, models, "opus") == "opus"
+
+
+def test_model_selection_menu_empty_list():
+    """Verify empty model list returns current model immediately."""
+    palette: dict[str, int] = {"title": 0, "path": 0, "foot": 0, "tutor": 0, "star": 0}
+    screen = MockCursesScreen([10])
+    assert m._model_selection_menu(screen, palette, [], "opus") == "opus"
+
+
+def test_model_selection_menu_scrolling_on_compact_terminal():
+    """Verify scrolling logic and indicators on a terminal smaller than model count."""
+    palette: dict[str, int] = {"title": 0, "path": 0, "foot": 0, "tutor": 0, "star": 0}
+    models: list[str] = [f"model_{idx}" for idx in range(20)]
+    # Start at model_15 on a 10-line terminal, press Enter
+    screen = MockCursesScreen([10], simulated_terminal_dimensions=(10, 80))
+    selected = m._model_selection_menu(screen, palette, models, "model_15")
+    assert selected == "model_15"
+    # Upper scroll indicator should have been drawn
+    has_upper_indicator = any("weitere Modelle oben" in text for _, _, text, _ in screen.rendered_lines)
+    assert has_upper_indicator
+

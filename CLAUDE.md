@@ -216,6 +216,26 @@ keys (`d`, `x`, the switches) are ignored on purpose, and the sentinel rows
 are greyed out and unselectable. `curses.set_escdelay(25)` makes Esc
 immediate; it is wrapped in try because it is Python ≥ 3.9 only.
 
+## Gärtner: maintenance by chat, plan before change
+
+`g` in the menu (and `--gaertner [PFAD…]`) routes to `_launch_gaertner`: one
+session at `_tutor_workdir`, same launch mechanics as the tutor, but no study
+brief. The user says in chat which courses to clean up, merge or revise; which
+course needs what is theirs to say, so the opening only carries every dossier,
+the exams and the focus (the courses checked in the multiselect when `g` was
+pressed, or the CLI paths) and asks. The system prompt holds the rules the
+user chose on 2026-09-22: a plan and an OK before anything that moves, deletes
+or merges files or changes the course list; the list changes only through
+`--register` / `--unregister` (the registry file is never edited by the
+session); `_archiv/` over deletion. It also tells the session which lines the
+menu parses, so a merge leaves one valid `Fortschritt:` line and resets the
+overview to `Übersicht: fehlt`.
+
+It is a key, not a row: no sentinel, not a valid default, no registry state,
+no streak. `g` is the one key the multiselect accepts besides its own. A CLI
+focus path that is not registered is shown but not registered, because
+registering is itself a change that needs the plan.
+
 ## The medium switch: choice in the launcher, mechanics in launcher templates
 
 The working medium (Xournal++ vs Tutor Board) is deliberately NOT part of the
@@ -321,6 +341,21 @@ and effort through — both are always concrete now that `auto` is gone.
 
 ## Commits
 
+- **Pick the branch before the first edit.** The checkout sits on `fau`, but
+  only the FAU layer belongs there: the fauclaude backend, the `fau:` models,
+  FAU names and URLs. Everything else goes on `main`, the public base version.
+  On 2026-09-22 two sessions committed general work on `fau` because this rule
+  was missing here, and it had to be ported by hand.
+- **Commit general work on `main` without switching the shared checkout:**
+  `git worktree add <scratch>/wt main`, edit, test and commit there, then
+  `git worktree remove`. Bring it into `fau` with `git merge main` in the
+  checkout. Merge, never rebase: `fau` is published on `fau/main`, and a rebase
+  rewrites those commits.
+- **A general change that calls FAU-layer code** (`_backend_for_model`,
+  `_discover_fau_models`, the fauclaude test) is split: the general part on
+  `main`, the FAU addition as its own commit on `fau` after the merge.
+- **Check before you report:** `git log --oneline --no-merges main..fau` lists
+  only FAU-layer commits.
 - **German summaries, as they are now**, and one concern per commit. Commit by
   pathspec (`git commit -m "…" -- a b`) so an unrelated dirty file does not ride
   along; `git add` only new paths.
@@ -344,7 +379,7 @@ and effort through — both are always concrete now that `auto` is gone.
 | `tier.py` | vendored subscription-tier → model/effort mapping; **vendored, unused** — no longer imported |
 | `templates/LERNLOOP_TEMPLATE.md` | the Lern-Loop procedure stamped into new workspaces |
 | `templates/medium_*.md` | per-medium mechanics, appended to the system prompt |
-| `test_lernclaude.py` | 18 offline tests — behaviour only, no network, no launch |
+| `test_lernclaude.py` | 24 offline tests — behaviour only, no network, no launch |
 | `requirements.txt` | empty by design; stdlib only |
 
 ## Gotchas
@@ -367,7 +402,7 @@ and effort through — both are always concrete now that `auto` is gone.
 ## Tests
 
 ```bash
-python3 -m pytest -q     # 18 tests, offline
+python3 -m pytest -q     # 24 tests, offline
 ```
 
 Tests load `main.py` under a unique module name via `importlib` rather than

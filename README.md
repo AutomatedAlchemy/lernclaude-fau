@@ -40,8 +40,8 @@ says what is missing, and the tool still runs by path.
 
 A bare `lernen` opens a curses picker of your registered courses, exam banner
 above, progress note per row. `↑`/`↓` move · `Enter` starts · `Space` opens the
-Meta multiselect · `m` medium · `o` model · `e` effort · `d` default · `x`
-removes · `q` quits. Untouched for ten seconds it autostarts your default.
+Meta multiselect · `g` Gärtner · `m` medium · `o` model · `e` effort · `d`
+default · `x` removes · `q` quits. Untouched for ten seconds it autostarts your default.
 
 | Launch | What it does |
 |---|---|
@@ -49,8 +49,9 @@ removes · `q` quits. Untouched for ten seconds it autostarts your default.
 | `lernen --tutor` | Tutors Choice: one session picks the most urgent course from per-course dossiers and tutors it |
 | `lernen --quickie` | One short, winnable Häppchen (about 5 min); counts a daily streak |
 | `lernen --meta [ZIEL QUELLE…]` | Meta-Häppchen: one short Häppchen in ZIEL shaped by the QUELLE courses; bare reuses the last combination |
+| `lernen --gaertner [PFAD…]` | Gärtner: a maintenance session, no studying. You tell it in chat which courses to clean up, merge or revise; the paths are its focus |
 
-Mechanics of the three modes, the streak and the dossiers: [docs/modes.md](docs/modes.md).
+Mechanics of the four modes, the streak and the dossiers: [docs/modes.md](docs/modes.md).
 Other flags: `--list` (`*` marks the default), `--set-default`, `--set-medium`,
 `--set-model`, `--set-effort`, `--add` (guided onboarding), `--register`,
 `--unregister`, `--print-prompt`, `--dry-run`, `--install [ws]`, `--remove [ws]`.
@@ -117,8 +118,8 @@ course list on every machine.
 
 Sessions launch on **Opus at `medium` effort**. Medium is deliberate: the loop is
 interactive tutoring, where latency is felt more than reasoning depth helps. `o`
-and `e` in the menu (or `--set-model` / `--set-effort`) change model (Opus |
-Sonnet | Fable, then the NHR@FAU gateway models shown as `fau: <name>`) and
+(cycle) or `O` (interactive menu) and `e` in the menu (or `--set-model` / `--set-effort`)
+change model (Opus | Sonnet | Fable, then the NHR@FAU gateway models shown as `fau: <name>`) and
 effort (low | medium | high | xhigh | max); the pick is used as chosen and
 persists in the registry.
 

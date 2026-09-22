@@ -1,7 +1,7 @@
 # Launch modes in detail
 
-The menu and the flags in the [README](../README.md) start four kinds of session.
-A plain course launch just runs that workspace's Lern-Loop. The other three are
+The menu and the flags in the [README](../README.md) start five kinds of session.
+A plain course launch just runs that workspace's Lern-Loop. The other four are
 described here.
 
 ## Tutors Choice
@@ -77,6 +77,29 @@ From a script: `lernen --meta ZIEL QUELLE [QUELLE…]` launches and remembers an
 explicit combination (unregistered paths get registered, like `--set-default`);
 bare `lernen --meta` reuses the remembered one; `lernen --print-prompt --meta …`
 shows the system prompt without launching or remembering.
+
+## Gärtner
+
+The Gärtner is a maintenance session, not a study session: no Häppchen, no
+tutoring. Press `g` in the menu (or run `lernen --gaertner`) and tell it in chat
+what to do with your courses — clean one up, merge two into one, revise a
+course's `CLAUDE.md` against the current template. It gets every course's
+dossier and your upcoming exams, greets you, names up to three things it notices
+(two courses on the same subject, a long-idle course, a missing overview) and
+asks what you want to tackle. It starts at the courses' common parent folder.
+
+Courses checked in the multiselect (`Space`) when you press `g` are named as
+the focus; the others are there for comparison and change only when you say so.
+From a script, `lernen --gaertner PFAD…` sets the focus; a path that is not
+registered is shown but not registered.
+
+Before anything that moves, deletes or merges files, or changes the course list,
+it shows a short plan and waits for your OK. It changes the course list only
+through `lernen --register` / `--unregister`, never by editing the registry file,
+and moves what should go into `_archiv/` inside the course instead of deleting
+it, unless you ask for deletion. After a merge it re-estimates the `Fortschritt:`
+line and sets `Übersicht: fehlt`, so the next study session builds a new overview.
+The Gärtner keeps no state and does not count towards the Quickie streak.
 
 ## The progress line
 
