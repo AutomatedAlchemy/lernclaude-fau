@@ -71,7 +71,7 @@ service, see the README). The active medium is a single launcher-level switch �
 toggle it with `m` in the menu, `lernen --set-medium xournalpp|board`, or
 `LERNCLAUDE_MEDIUM` — not a per-course fact.
 
-The mechanics of each medium live in `templates/medium_<name>.md` and ride into
+The mechanics of each medium live in `templates/media/<name>.md` and ride into
 every session via the system prompt; course workspaces carry no medium
 instructions at all, so improving how a medium works is one edit for all
 subjects. Mid-session you can still switch verbally ("lass uns aufs Board") —

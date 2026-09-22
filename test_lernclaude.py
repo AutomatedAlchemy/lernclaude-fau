@@ -74,11 +74,11 @@ def test_no_personal_paths_and_no_builtin_default():
     assert m._menu_rows([]) == [m._ADD_SENTINEL]
 
 
-def test_medium_board_carries_no_mcp_manual():
+def test_board_template_carries_no_mcp_manual():
     """The board template says what the loop wants on the board, never how the
     MCP tools behave: the server sends that itself on every connection, and a
     copy here can only be older. See CLAUDE.md § The medium switch."""
-    text = (HERE / "templates" / "medium_board.md").read_text(encoding="utf-8")
+    text = (HERE / "templates" / "media" / "board.md").read_text(encoding="utf-8")
     for manual in (
         "kinds",                          # wake-kind lists (0.22.0 removed the parameter)
         "curl",                           # how wait_url / request_upload are driven
@@ -88,7 +88,7 @@ def test_medium_board_carries_no_mcp_manual():
         "kontoweit",                      # select_board semantics, stated by the server
         "nimmt keine PDFs",               # upload rules, stated by request_upload
     ):
-        assert manual not in text, f"MCP usage leaked into medium_board.md: {manual}"
+        assert manual not in text, f"MCP usage leaked into media/board.md: {manual}"
     assert "Bedienung des Boards" in text
 
 
@@ -144,7 +144,7 @@ def test_medium_choice_precedence(monkeypatch):
     monkeypatch.setenv("LERNCLAUDE_MEDIUM", "garbage")
     assert m._current_medium() == "xournalpp"                # junk falls back
     for medium in m._MEDIA:
-        assert (HERE / "templates" / f"medium_{medium}.md").is_file()
+        assert (HERE / "templates" / "media" / f"{medium}.md").is_file()
 
 
 def test_backend_autoselection_from_model(monkeypatch):

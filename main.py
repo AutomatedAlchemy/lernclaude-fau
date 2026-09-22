@@ -166,7 +166,7 @@ def _launch_env() -> dict:
 # working medium: one launcher-level switch (menu key `m`), not a per-course fact
 # ----------------------------------------------------------------------------
 # The *choice* of medium lives here (registry key `medium`, toggled in the TUI);
-# the *mechanics* of each medium live in templates/medium_<name>.md and ride into
+# the *mechanics* of each medium live in templates/media/<name>.md and ride into
 # the session via the system prompt. Course CLAUDE.mds carry neither any more —
 # they keep only course content (Themenkarte, Eckdaten, rotation).
 _MEDIA = ("xournalpp", "board")
@@ -415,7 +415,7 @@ def _set_effort(effort: str) -> str:
 def _medium_prompt(medium: str) -> str:
     """The medium's mechanics from its template file — empty when missing."""
     try:
-        return (TEMPLATE_DIR / f"medium_{medium}.md").read_text(encoding="utf-8")
+        return (TEMPLATE_DIR / "media" / f"{medium}.md").read_text(encoding="utf-8")
     except OSError:
         return ""
 
@@ -457,7 +457,7 @@ def _assemble_prompt(workspace: str) -> str:
     Häppchen rotation) is the SSoT in the workspace's CLAUDE.md, which is loaded
     automatically. We deliberately do NOT restate the file list here. The
     working medium is the one launcher-owned piece: its choice comes from the
-    menu switch, its mechanics from templates/medium_<name>.md."""
+    menu switch, its mechanics from templates/media/<name>.md."""
     return (
         f"Du fährst eine Klausur-Lern-Session im Ordner {workspace}. "
         "Die vollständige Prozedur (welches Lern-Set du öffnest und die "

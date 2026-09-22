@@ -126,21 +126,35 @@ Gilt für jeden Wait: Übersichts-Bestätigung, Häppchen-Abgabe, „Noch eins?"
   Leiste**, samt Korrektur: der User will sie weiter sehen. Archivieren nur auf
   ausdrückliche Bitte; der Eintrag in der Übersicht bleibt in jedem Fall.
 
-## Animation bei wiederkehrendem Fehlermuster
+## Erklär-Clip zu jedem Häppchen (Nutzervorgabe 17.09.2026)
 
-Steht ein Fehlermuster zum zweiten oder dritten Mal in `fehlermuster.md` **und**
-ist es geometrisch oder dynamisch (Vektordrehung, Epsilon-Delta, Konvergenz,
-Transformationen), darf ein kurzer Clip an die Korrektur — dafür gibt es die
-`manim-kit`-Skill. Ein einmaliger Vorzeichenfehler bekommt einen Satz, keinen Film.
+Nach jedem neuen Häppchen-Tab prüfen, ob ein kurzer Clip die Idee trägt — eine
+Funktion, die sich bewegt, eine Ableitung als Tangente, ein Vektor, der sich dreht, eine
+Konvergenz, eine Skizze, die entsteht. Trägt er sie, wird er gebaut, **während der User
+den Tab schon bearbeitet**, und als Video-Block unten an denselben Tab gehängt. Reine
+Wiedererkennung (Listen, Begriffspaare, Ankreuz-Drills) bekommt keinen Clip.
 
-- **Nie in der Übersicht und nie in einer Aufgabe.** Ein Häppchen sind fünf
-  Minuten; Rendern kostet mehrere davon, und der User wartet zu.
-- **Asynchron bauen**: Render als Hintergrund-Shell starten, währenddessen das
-  nächste Häppchen bauen, den Clip als Video-Block an den Tab mit der Korrektur
-  nachreichen. 20 Sekunden reichen, eine Idee pro Szene.
-- **Fail into silence**: `manim-kit doctor` einmal pro Host; fehlt LaTeX oder
-  ffmpeg oder scheitert der Render, bleibt es beim Textblock. Kein Hinweis an
-  den User, keine zweite Runde.
+- **Reihenfolge:** Tab bauen, in der Übersicht eintragen, `select_tab` — **dann** den
+  Clip anstoßen. Der User wartet nie auf einen Render.
+- **Per Opus-Subagent, nicht im eigenen Kontext** (Token-Sparsamkeit): `Agent` mit
+  `model: opus`, Auftrag = Skill `manim-kit` laden, eine Szene, 15–25 s, eine Idee,
+  **1080p bei 60 fps** (`-q h`, manim-kit-Standard; Nutzervorgabe 18.09.2026, nie Draft-Qualität), unter 8 MB je Clip (längere Videos als Einzelclips, nicht herunterkomprimieren), die Standard-Tonspur/Musik des manim-kit **nicht** abbestellen;
+  Rückgabe **nur** der mp4-Pfad (oder
+  `RENDER FAILED: <Grund>`).
+- **Immer mit Voiceover** (Nutzervorgabe 18.09.2026): der Clip wird als `VoiceoverScene`
+  gebaut (`manim-kit new NAME --template narrated`), jede Animation in einem
+  `with self.voiceover(...)`-Block, der die Idee in ein bis zwei Sätzen sagt — nicht die
+  Beschriftung vorlesen, sondern erklären, was gerade passiert. Stimme:
+  **`kokoro-v1:af_sarah`** (offline, kostenlos, englisch). Eine offline-deutsche Stimme
+  gibt es in dieser Version nicht; die bezahlte `gemini-flash-tts:Aoede:de` hat der User
+  am 18.09. abgelehnt („Englisch, kostenlos"). Vor dem ersten Clip je Host einmal
+  `manim-kit voice setup` (354 MB Modell). Die Musik mischt manim-kit bei Narration
+  automatisch unter die Stimme — nichts extra einstellen. Der Hauptkontext lädt das mp4 hoch
+  und hängt es als Video-Block unten an denselben Tab.
+- **Fail into silence:** scheitert der Render, bleibt es beim Textblock; kein Hinweis an
+  den User, keine zweite Runde. `manim-kit doctor` einmal pro Host.
+- **Nie in die Übersicht.** Ein Clip an einer Korrektur (wiederkehrendes, geometrisches
+  Fehlermuster) bleibt zusätzlich erlaubt, gleiche Mechanik.
 
 ## „Noch eins?“ (Quickie)
 

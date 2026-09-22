@@ -93,7 +93,7 @@ a markdown file. The split follows the Fortschritt pattern:
   Themen → Materialien → Vereinbarung) and, once stamped, the course CLAUDE.md.
   It must not migrate into `main.py` — `test_prompts_orient_without_reencoding_
   the_procedure` only allows the section name and the template path there.
-- **Look** is `templates/medium_<name>.md` (block order, the single
+- **Look** is `templates/media/<name>.md` (block order, the single
   „Gelesen & einverstanden" submit, `wait_url`, the backfill of an old Tab 0).
 - **Presence** is the launcher's: `course_overview` parses one line the session
   writes to `todo.md` after the user confirmed (`Übersicht: bestätigt
@@ -242,7 +242,7 @@ The working medium (Xournal++ vs Tutor Board) is deliberately NOT part of the
 SSoT in the course docs — it is cross-course infrastructure. Two launcher-owned
 pieces: the *choice* (registry key `medium`, menu key `m`, `--set-medium`,
 `LERNCLAUDE_MEDIUM` override, default `xournalpp`) and the *mechanics*
-(`templates/medium_<name>.md`, appended to the system prompt by
+(`templates/media/<name>.md`, appended to the system prompt by
 `_assemble_prompt` — only the active medium's file, fail-into-silence when
 missing). `_prompt_common` emits three tagged parts — `<orientierung>`,
 `<heute>` and `<medium_mechanik name="…">` — so the session can tell the
@@ -255,12 +255,12 @@ fixed medium, which then wins — the board-native language courses rely on that
 **A medium file carries what the loop wants from the medium, never how the medium's
 tools work.** For the Tutor Board the MCP server sends its own instructions and
 tool descriptions on every connection, and those are maintained with the server.
-Any copy of them in `templates/medium_board.md` is older than the server by
+Any copy of them in `templates/media/board.md` is older than the server by
 construction and wins over it in practice, because it sits in the system prompt
 as an order. That is how a `kinds:["click","submit"]` line from an August
 workaround made a session deaf to the board chat on 2026-09-05, and earlier a
 "`select_board` does not exist" note made sessions build blindly.
-`test_medium_board_carries_no_mcp_manual` pins the boundary: a server fact that
+`test_board_template_carries_no_mcp_manual` pins the boundary: a server fact that
 seems missing is added to the server's descriptions — the Tutor Board server is
 a private repo of the author, agent docs at
 <https://beta.probable.work/agent.md> — not to the template.
@@ -378,7 +378,7 @@ and effort through — both are always concrete now that `auto` is gone.
 | `main.py` | launcher, menu, registry, install/remove |
 | `tier.py` | vendored subscription-tier → model/effort mapping; **vendored, unused** — no longer imported |
 | `templates/LERNLOOP_TEMPLATE.md` | the Lern-Loop procedure stamped into new workspaces |
-| `templates/medium_*.md` | per-medium mechanics, appended to the system prompt |
+| `templates/media/*.md` | per-medium mechanics, appended to the system prompt |
 | `test_lernclaude.py` | 24 offline tests — behaviour only, no network, no launch |
 | `requirements.txt` | empty by design; stdlib only |
 
