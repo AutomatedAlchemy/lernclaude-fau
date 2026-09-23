@@ -41,7 +41,8 @@ says what is missing, and the tool still runs by path.
 A bare `lernen` opens a curses picker of your registered courses, exam banner
 above, progress note per row. `↑`/`↓` move · `Enter` starts · `Space` opens the
 Meta multiselect · `g` Gärtner · `m` medium · `o` model · `e` effort · `d`
-default · `x` removes · `q` quits. Untouched for ten seconds it autostarts your default.
+default · `x` removes the course from the menu, and on request moves its folder
+into `_archiv/` beside it · `q` quits. Untouched for ten seconds it autostarts your default.
 
 | Launch | What it does |
 |---|---|

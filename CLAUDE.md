@@ -286,6 +286,16 @@ default, any key to cancel. That is the point — an autostart that dropped
 straight into a session would hand a fresh login a Claude process with no way
 out, so nothing here should ever point autostart at `--quickie` or a course.
 
+## Removing a course: unregister, optionally archive
+
+`x` in the menu asks first. `j` only unregisters and leaves the folder alone.
+`a` also moves the folder to `<parent>/_archiv/<name>` (`_archive_workspace`),
+with a date suffix when that name is taken, so nothing is ever overwritten.
+The move comes first and the course is unregistered only if it worked. A failed
+move stays in the dialog with the error. The move is refused when another
+registered course lies inside the folder. `--unregister` stays registry-only,
+because the Gärtner prompt relies on "trägt nur aus, löscht nichts".
+
 ## Tool-local state
 
 The registry lives at `data/registry.json`, anchored to `SCRIPT_DIR` — **not**

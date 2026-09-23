@@ -135,6 +135,25 @@ def test_registry_state_machine(tmp_path, monkeypatch):
     assert m._ensure_default({"workspaces": [b], "default": "__RETIRED__"})["default"] == b
 
 
+def test_archive_moves_the_course_beside_it_and_never_overwrites(tmp_path):
+    kurs = tmp_path / "Kurse" / "Analysis"
+    (kurs / "sub").mkdir(parents=True)
+    (kurs / "todo.md").write_text("x", encoding="utf-8")
+    dest = m._archive_workspace(str(kurs))
+    assert dest == tmp_path / "Kurse" / "_archiv" / "Analysis"
+    assert (dest / "todo.md").is_file() and not kurs.exists()
+    kurs.mkdir()                                   # same name again: gets a date suffix
+    assert m._archive_target(str(kurs), "2026-09-23").name == "Analysis-2026-09-23"
+    (tmp_path / "Kurse" / "_archiv" / "Analysis-2026-09-23").mkdir()
+    assert m._archive_target(str(kurs), "2026-09-23").name == "Analysis-2026-09-23-2"
+    inner = kurs / "Teil"                          # a registered course inside blocks the move
+    inner.mkdir()
+    with pytest.raises(OSError):
+        m._archive_workspace(str(kurs), [str(kurs), str(inner)])
+    assert kurs.is_dir()
+    with pytest.raises(OSError):
+        m._archive_workspace(str(tmp_path / "fehlt"))
+
 def test_medium_choice_precedence(monkeypatch):
     assert m._current_medium() == "xournalpp"
     m._set_medium("board")

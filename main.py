@@ -831,6 +831,39 @@ def _unregister_workspace(path: str) -> bool:
     return True
 
 
+def _archive_target(path: str, today: str | None = None) -> Path:
+    """Where `_archive_workspace` would move a course: ``<parent>/_archiv/<name>``,
+    with the date (and a counter) appended when that name is already taken."""
+    src = Path(path)
+    base = src.parent / "_archiv"
+    dest = base / src.name
+    if dest.exists():
+        today = today or datetime.now().strftime("%Y-%m-%d")
+        dest = base / f"{src.name}-{today}"
+        n = 2
+        while dest.exists():
+            dest = base / f"{src.name}-{today}-{n}"
+            n += 1
+    return dest
+
+
+def _archive_workspace(path: str, registered: list[str] = ()) -> Path:
+    """Move a course folder out of the way, into ``_archiv/`` beside it. Refuses
+    (OSError) when another registered course lives inside it, since the move would
+    orphan that course. Does not touch the registry; the caller unregisters."""
+    src = Path(path)
+    if not src.is_dir():
+        raise OSError(f"Ordner nicht gefunden: {src}")
+    for other in registered:
+        o = Path(other)
+        if o != src and o.is_relative_to(src):
+            raise OSError(f"enthält den registrierten Kurs {o}")
+    dest = _archive_target(path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(src), str(dest))
+    return dest
+
+
 # ----------------------------------------------------------------------------
 # exam calendar (optional): a markdown table of upcoming exams, shown in the menu
 # ----------------------------------------------------------------------------
@@ -1627,25 +1660,41 @@ def _init_colors():
     }
 
 
-def _confirm_delete(stdscr, C, path: str) -> bool:
-    """Blocking y/n confirmation before removing a course from the menu."""
-    import curses
+def _confirm_delete(stdscr, C, path: str, registered: list[str] = ()) -> bool:
+    """Blocking confirmation before removing a course from the menu. Returns True
+    when the course should be unregistered; with `a` its folder has already been
+    moved to ``_archiv/`` by then. A failed move keeps the dialog open."""
+    can_archive = Path(path).is_dir()
+    dest = _archive_target(path) if can_archive else None
+    error = ""
     while True:
         stdscr.erase()
         _safe_addstr(stdscr, 0, 0, "╭─ Kurs entfernen? ─╮", C["title"])
         _safe_addstr(stdscr, 2, 0, "Diesen Kurs aus dem Startmenü entfernen?", C["path"])
         _safe_addstr(stdscr, 3, 2, path, C["star"])
         _safe_addstr(stdscr, 5, 0,
-                     "(nur der Registry-Eintrag wird gelöscht — keine Dateien werden angefasst)",
-                     C["foot"])
-        _safe_addstr(stdscr, 7, 0,
-                     "  j / y = ja, entfernen   ·   n / Esc = abbrechen  ", C["count"])
+                     "  j / y   = nur austragen, der Ordner bleibt, wo er ist", C["count"])
+        row = 6
+        if can_archive:
+            _safe_addstr(stdscr, row, 0,
+                         "  a       = austragen und den Ordner verschieben nach", C["count"])
+            _safe_addstr(stdscr, row + 1, 12, str(dest), C["foot"])
+            row += 2
+        _safe_addstr(stdscr, row, 0, "  n / Esc = abbrechen", C["count"])
+        if error:
+            _safe_addstr(stdscr, row + 2, 0, f"Verschieben fehlgeschlagen: {error}", C["hot"])
         stdscr.refresh()
         ch = stdscr.getch()
         if ch == -1:
             continue  # timeout tick — keep waiting for a real key
         if ch in (ord("y"), ord("j")):
             return True
+        if ch == ord("a") and can_archive:
+            try:
+                _archive_workspace(path, registered)
+                return True
+            except OSError as e:
+                error = str(e)
         if ch in (ord("n"), ord("q"), 27):  # 27 = Esc
             return False
 
@@ -2010,7 +2059,8 @@ def _menu_loop(stdscr, data: dict):
                 default = rows[idx]
                 data["default"] = default  # persisted by the caller
         elif ch in (ord("x"), curses.KEY_DC):  # delete the highlighted course
-            if rows[idx] not in _SENTINELS and _confirm_delete(stdscr, C, rows[idx]):
+            if rows[idx] not in _SENTINELS and _confirm_delete(
+                    stdscr, C, rows[idx], data["workspaces"]):
                 data["workspaces"].remove(rows[idx])
                 if data["default"] == rows[idx]:
                     data["default"] = None
