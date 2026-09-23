@@ -49,6 +49,13 @@ beschrieben oder behoben, nicht hier umschifft.
   `select_tab` jeden Eintrag selbst nachrechnen und die Zuordnung Feld → Wert
   prüfen. Ein falscher Schlüssel markiert eine richtige Abgabe als falsch und
   verfälscht das Fehlermuster. Gleichwertige Schreibweisen als Liste angeben.
+- **Unter jeder Aufgabe ein Korrektur-Platzhalter** (Nutzervorgabe 23.09.2026):
+  direkt nach ihrem letzten Block (Knopf oder Eingabefeld), vor der nächsten
+  Aufgabe, ein Markdown-Block mit der Id `<aufgabe>_korrektur`, der bis zum
+  Review nur „—“ enthält. Neue Blöcke landen immer am Tabende;
+  nur ein Platzhalter, der schon beim Bauen an seiner Stelle steht, bringt die
+  Korrektur später direkt unter die Aufgabe. Das gilt für jede Aufgabe, auch ohne
+  Schlüssel und auch in Tabs mit nur einer Aufgabe.
 
 ## Kursübersicht (Tab 0)
 
@@ -119,12 +126,20 @@ Gilt für jeden Wait: Übersichts-Bestätigung, Häppchen-Abgabe, „Noch eins?"
 
 - Abgaben samt Score vom Board lesen. Trägt der Tab eine Zeichnung, sie holen —
   **nie über eine ungesehene Zeichnung raten**.
-- Die Korrektur als Block **am selben Tab** zeigen, nicht nur im Chat: Zitat →
-  warum falsch → was stattdessen, **je Fehler höchstens fünf Sätze**. Sie ersetzt
-  per `update_block` den `submit`-Knopf der Aufgabe und steht damit direkt unter der
-  Frage (Nutzervorgabe 19.09.2026). Ist der
-  Score falsch, weil der Schlüssel falsch war, das auf dem Board richtigstellen
-  und dem User sagen.
+- Die Korrektur **am selben Tab, direkt unter der Aufgabe** zeigen, nicht nur im
+  Chat und nie gesammelt am Tabende: Zitat → warum falsch → was stattdessen,
+  **je Fehler höchstens fünf Sätze**. Jede Aufgabe bekommt ihre eigene Korrektur,
+  eine richtig gelöste ein kurzes „✓“. Sie kommt per `update_block` in den
+  Platzhalter `<aufgabe>_korrektur`; der `submit`-Knopf der Aufgabe darf
+  stattdessen ersetzt werden, er steht an derselben Stelle (Nutzervorgabe
+  19.09. und 23.09.2026). Die Eingaben des Users bleiben stehen.
+- Ältere Tabs ohne Platzhalter: die Korrektur in den `submit`-Knopf der Aufgabe
+  setzen. Hat die Aufgabe keinen, die Korrektur vor den Text des Blocks setzen,
+  mit dem die nächste Aufgabe beginnt, abgesetzt durch eine Linie. Nur bei der
+  letzten Aufgabe darf sie angehängt werden, denn das Tabende ist dort direkt
+  unter der Aufgabe.
+- Ist der Score falsch, weil der Schlüssel falsch war, das auf dem Board
+  richtigstellen und dem User sagen.
 - Danach die Übersicht per `update_block` nachziehen (Themen-Level,
   Häppchen-Status, `Fortschritt:`-Zeile). Fertig reviewte Tabs **bleiben auf der
   Leiste**, samt Korrektur: der User will sie weiter sehen. Archivieren nur auf
@@ -166,7 +181,7 @@ Die Frage nach dem nächsten Quickie gehört **aufs Board, nicht ins Terminal** 
 der User schaut ohnehin dorthin, und ein Klick ist billiger als eine getippte
 Antwort.
 
-- Ans Ende des Häppchen-Tabs, direkt unter die Korrektur, genau EINEN
+- Ans Ende des Häppchen-Tabs, unter die letzte Aufgabe und ihre Korrektur, genau EINEN
   `submit`-Knopf („Noch eins?“). Kein Gegenstück zum Ablehnen — wer aufhören
   will, klickt einfach nicht oder sagt es im Chat; ein „für heute reicht's“-Knopf
   macht das Aufhören zur angebotenen Option und arbeitet gegen die Gewohnheit.

@@ -199,7 +199,7 @@ eigenes Häppchen hier im Loop:
 
 **3. Review-Regel (verbindlich): Fehler SICHTBAR am Blatt des Users zeigen**, nicht nur
 loggen — wie, steht in der Medium-Mechanik im Systemprompt (annotiertes PNG bzw.
-Korrektur am Board-Tab). Zusätzlich im Chat explizit durchgehen (Zitat → warum falsch →
+Korrektur am Board-Tab direkt unter der jeweiligen Aufgabe). Zusätzlich im Chat explizit durchgehen (Zitat → warum falsch →
 was stattdessen). Erst danach das nächste Häppchen. Fragt der User eine Diagnose
 nach, die Diagnose prüfen statt verteidigen: war sie falsch, am Blatt und in
 `fehlermuster.md` mit Datum richtigstellen (EP2 2026, Muster 17b: ein selbst
