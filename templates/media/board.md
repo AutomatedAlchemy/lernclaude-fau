@@ -39,6 +39,8 @@ beschrieben oder behoben, nicht hier umschifft.
 - **Antwortformat vor Freitext-Mathe bevorzugen**: Zahlenfelder mit vorgedruckter
   Form, oder `radio`. Exponenten zu tippen frisst mehr Zeit als das Rechnen, und
   ein Radio hat kein leeres Feld, in dem man sich verstecken kann.
+- **Antworten in Textfeldern, den Canvas nur für echte 2D-Antworten** (Skizzen,
+  Richtungsfelder, Schaltbilder), nie für Formeln oder Rechenwege.
 - **Wunde Stellen in Einzelfelder zerlegen** (Vorzeichen, Vorfaktor, Exponent
   getrennt) und in jedem Schritt den Wert neu hinschreiben, statt auf die Zeile
   darüber zu verweisen — sonst wird die Zahl von oben durchgereicht.
@@ -118,7 +120,9 @@ Gilt für jeden Wait: Übersichts-Bestätigung, Häppchen-Abgabe, „Noch eins?"
 - Abgaben samt Score vom Board lesen. Trägt der Tab eine Zeichnung, sie holen —
   **nie über eine ungesehene Zeichnung raten**.
 - Die Korrektur als Block **am selben Tab** zeigen, nicht nur im Chat: Zitat →
-  warum falsch → was stattdessen, **je Fehler höchstens fünf Sätze**. Ist der
+  warum falsch → was stattdessen, **je Fehler höchstens fünf Sätze**. Sie ersetzt
+  per `update_block` den `submit`-Knopf der Aufgabe und steht damit direkt unter der
+  Frage (Nutzervorgabe 19.09.2026). Ist der
   Score falsch, weil der Schlüssel falsch war, das auf dem Board richtigstellen
   und dem User sagen.
 - Danach die Übersicht per `update_block` nachziehen (Themen-Level,

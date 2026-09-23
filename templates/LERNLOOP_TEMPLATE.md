@@ -11,7 +11,7 @@
 |---|---|
 | **Fach** | «FACH» |
 | **Klausur** | «Datum, Uhrzeit, Ort» |
-| **Modus** | «schriftlich \| mündlich» |
+| **Modus** | «Rechnen \| Freitext \| Multiple Choice \| mündlich»; hat die Prüfung Teile mit verschiedenem Format, das Format je Teil |
 | **Bestehen ab** | «z.B. 50 %» |
 | **Hilfsmittel** | «z.B. 5 handschriftliche A4-Seiten \| keine \| Formelsammlung» |
 
@@ -44,10 +44,14 @@ als vorläufig.
 Aufgabe jeder Altklausur lässt sich einer Zeile zuordnen, sonst kommt eine Zeile
 dazu. Das Ergebnis steht in der Vereinbarung.
 
-| # | Thema | Typische Falle | Quelle |
-|---|-------|----------------|--------|
-| 1 | «…» | «…» | «Altklausur SS25 Nr. 6 · Tut. 3 · VL 5» |
-| 2 | «…» | «…» | «…» |
+Die Spalte **Klausurbeleg** sagt, ob eine Altklausur die Zeile abfragt (✓) oder
+nicht (—). Nach ihr wird gekürzt, wenn die Zeit nicht reicht (§Die drei
+Kern-Dateien, `Budget:`-Zeile).
+
+| # | Thema | Typische Falle | Quelle | Klausurbeleg |
+|---|-------|----------------|--------|--------------|
+| 1 | «…» | «…» | «Altklausur SS25 Nr. 6 · Tut. 3 · VL 5» | «✓» |
+| 2 | «…» | «…» | «…» | «—» |
 
 ## Kursübersicht (beim Anlegen bauen, vom User bestätigen)
 
@@ -95,8 +99,9 @@ diese Zeile. Bei Neubestätigung das Datum ersetzen.
   Dritte Zeile, nach jedem Review nachgezogen: `Budget: T Tage · h Häppchen/Tag ·
   n Themen offen`. Reicht T·h nicht für eine Runde über die offenen Themen, schlägt
   die Session **von sich aus** einen gekürzten Pfad vor (welche Zeilen der Themenkarte
-  gestrichen werden; Altklausur-belegte Zeilen zuerst behalten) und lässt ihn
-  bestätigen. Nicht warten, bis der User „zu viele Themen" sagt (EP2 2026: 36 Themen,
+  gestrichen werden) und lässt ihn bestätigen. Behalten wird in dieser Reihenfolge:
+  Zeilen mit Klausurbeleg, dann Zeilen mit Beleg aus Übungsblatt, Fragensammlung
+  oder Skriptkern, der Rest ist Reserve. Nicht warten, bis der User „zu viele Themen" sagt (EP2 2026: 36 Themen,
   ein Häppchen alle drei Tage, zweimal erst auf Beschwerde gekürzt).
 - **`fehlermuster.md`** = *was ich falsch mache*, der personalisierte Kern. Zwei Teile:
   oben die **Rangliste** `## Aktive Muster`, eine Tabelle `# | Muster | Belege | Stand`
@@ -160,8 +165,14 @@ die durch die Themen der Themenkarte oben **rotieren** — NICHT große Multi-Au
   Übungsblatt. Nicht zu K springen, solange G nicht sitzt. Eine Klausuraufgabe mit
   0 von 5 misst nur, dass Grundlagen fehlen (EP2 2026: die Fehler saßen in Präfixen
   und „mal statt geteilt", nicht in der Physik; eine 5-min-Aufgabe dauerte 30 min).
-- **Rechnen, nicht Theorie:** G-Drills wie S- und K-Aufgaben sind Rechenaufgaben.
-  Theorie/Definitionen nur als fertige Merksätze aufs Cheatsheet, nicht als Übung.
+- **Rechnen, nicht Theorie, wo die Prüfung rechnet:** G-Drills wie S- und K-Aufgaben
+  sind dann Rechenaufgaben, Theorie/Definitionen nur als fertige Merksätze aufs
+  Cheatsheet. Fragt die Prüfung Wissen ab, folgt das Häppchen ihrem Format
+  (§Format folgt der Prüfung).
+- **Distraktoren und Hinweise aus `fehlermuster.md`**, bei jedem Häppchen: der falsche
+  Weg, den der User wirklich geht, ist die beste Falle.
+- **„Nennen Sie n" heißt alle n.** Im Review zählt Vollzähligkeit; eine fehlende
+  Nennung ist ein Fehler, auch wenn der Rest stimmt.
 - **Konzeptlücken erst prüfen:** bei neuen Themen nicht Bekanntheit voraussetzen — 1–2-
   Satz-Konzeptintro, Notation ausschreiben (z.B. ⟨a,b⟩ = a₁b₁+a₂b₂).
 - **Ablauf:** eine Mini-Aufgabe → User löst sie mit Zwischenschritten im aktiven Medium →
@@ -178,10 +189,10 @@ eigenes Häppchen hier im Loop:
   Aussage gilt"), schnelle Konzept-Checks vor einem neuen Thema, Faktenwissen im
   mündlich-Modus. Falsch für alles mit Rechenweg/Herleitung — dort misst MC nur
   Ausschlussdenken; das bleibt ein Rechen-Häppchen. Im Zweifel offene Frage statt
-  Optionen.
+  Optionen. Stellt die Prüfung selbst Multiple Choice, ist MC das richtige Format
+  (§Format folgt der Prüfung).
 - **Umsetzung im aktiven Medium** (s. Systemprompt): AskUserQuestion-Runden im Chat
-  bzw. ein eigener Quiz-Tab auf dem Board. Distraktoren gezielt aus `fehlermuster.md`
-  bauen: der falsche Weg, den der User wirklich geht, ist die beste Falle.
+  bzw. ein eigener Quiz-Tab auf dem Board. Distraktoren aus `fehlermuster.md` (§2).
 - **Nachbereitung wie jedes Review:** falsche Antworten → `fehlermuster.md` (Zitat →
   warum falsch → was stattdessen); ein Quiz zählt als Häppchen in der
   `Fortschritt:`-Zeile.
@@ -197,8 +208,23 @@ hergeleiteter Faktor ½ war als Fehler gewertet worden). Jedes Review auch in
 falls angelegt), und die Zeile
 `Fortschritt: x/y Häppchen` in `todo.md` mitziehen (x hochzählen, y neu schätzen).
 
-**Modus-Split:**
-- **schriftlich** → der Häppchen-Rechen-Loop wie oben.
+**3b. Wiederholungs-Häppchen** — ein Muster in `fehlermuster.md` gilt erst als
+repariert, wenn ein späteres Häppchen es ohne Hinweis abfragt und der User es richtig
+macht. Dafür regelmäßig ein gemischtes Häppchen nur aus Posten, die schon einmal falsch
+waren, ohne neuen Stoff; spätestens in der letzten Woche vor der Klausur. Es zählt als
+Häppchen, Review wie üblich. (Datenerfassung 2026: Schluss-Drill „was fehlte" am Klausurmorgen,
+fünf Runden über alle vier Teile.)
+
+**Format folgt der Prüfung** — das Häppchen übt in dem Format, in dem die Prüfung
+fragt. Hat die Prüfung Teile mit verschiedenem Format, gilt das je Teil (Eckdaten).
+- **Rechnen/Herleiten** → der Häppchen-Rechen-Loop wie oben.
+- **Freitext/Stichworte** → die Frage im Klausurwortlaut, die Antwort in Stichworten
+  wie in der Klausur; Review gegen eine Modellantwort mit Quellbeleg.
+- **Multiple Choice** → Drills im Originalstil, je Frage mit der Angabe „genau eine"
+  oder „mehrere richtige Antworten". Das Ankreuzen wird mitgeübt: die Angabe zuerst
+  lesen, nie eine Frage ohne Kreuz lassen, bei „mehrere" jedes weitere Kreuz nur mit
+  einem Grund. Zu jedem Kreuz ein Begründungsfeld für einen Halbsatz; das Review liest
+  die Begründung mit (Datenerfassung 2026: mit ausgefüllter Begründung 1/1 richtig, ohne 0/5).
 - **mündlich** → Laut-erklären-Loop: Begründungen laut formulieren, auf Schlüsselwörter
   bestehen. Rechnen üben hilft dort wenig.
 
