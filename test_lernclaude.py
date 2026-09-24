@@ -387,6 +387,21 @@ def test_prompts_orient_without_reencoding_the_procedure(tmp_path, monkeypatch):
     assert ".xopp" in m._assemble_prompt(a) and "get_canvas" not in m._assemble_prompt(a)
 
 
+def test_catchall_rule_only_with_a_marked_registered_course(tmp_path):
+    """The maths-gap rule reaches every session once a registered course
+    carries the inbox file — found through the registry, never by a path."""
+    a, b = _courses(tmp_path, "Physik", "Mathe")
+    for ws in (a, b):
+        m._register_workspace(ws)
+    assert "<mathe_luecken>" not in m._prompt_common()          # nobody marked
+    Path(b, m.CATCHALL_INBOX).write_text("# Lücken-Eingang\n", encoding="utf-8")
+    assert m._catchall_workspace() == b
+    for text in (m._assemble_prompt(a), m._assemble_tutor_prompt(), m._assemble_gaertner_prompt()):
+        assert "<mathe_luecken>" in text and str(Path(b, m.CATCHALL_INBOX)) in text
+    m._unregister_workspace(b)
+    assert "<mathe_luecken>" not in m._prompt_common()          # unregistered: silent
+
+
 def test_scaffold_never_overwrites_and_teaches_the_conventions(tmp_path):
     ws = tmp_path / "NeuesFach"; ws.mkdir()
     (ws / "todo.md").write_text("KEEP ME", encoding="utf-8")

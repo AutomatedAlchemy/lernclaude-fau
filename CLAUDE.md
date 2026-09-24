@@ -265,6 +265,18 @@ seems missing is added to the server's descriptions — the Tutor Board server i
 a private repo of the author, agent docs at
 <https://beta.probable.work/agent.md> — not to the template.
 
+## Catch-all for maths gaps: a marker file, one rule in the prompt
+
+One course may collect the maths gaps the other courses find. It marks itself
+with `luecken_eingang.md` (`CATCHALL_INBOX`); `_catchall_workspace` takes the
+first registered course that has it, so the path comes from the registry and
+`test_no_personal_paths_and_no_builtin_default` stays green. `_prompt_common`
+then adds a `<mathe_luecken>` block to every session: book a pure calculation
+gap there as an appended line, format per the file's header. The launcher owns
+only that routing sentence. How the catch-all works through its inbox is its
+own CLAUDE.md's business, like any other procedure. Added 2026-09-24 so the
+rule lives in one place instead of a copied paragraph in every course.
+
 ## Autostart belongs to the installer, not to this file
 
 Login autostart is cli-tools-kit's, and the whole implementation here is one

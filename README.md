@@ -99,6 +99,15 @@ The time is optional and a bare `12.01.` means the *next* 12 January. Rows past,
 struck through (`~~…~~`) or marked `abgelegt` / `bestanden` / `Rücktritt` /
 `entfällt` / `verschoben` / `TBD` drop out.
 
+## A catch-all course for maths gaps
+
+Put a file `luecken_eingang.md` into one registered course and that course
+collects maths gaps from all others: every session's system prompt then tells it
+to append a line there when a review finds a pure calculation error (powers,
+units, fractions, signs …) rather than a subject error. The file's header states
+the line format; the course's own `CLAUDE.md` says how it works through the
+inbox. No file, no rule.
+
 ## Configuration
 
 All optional.

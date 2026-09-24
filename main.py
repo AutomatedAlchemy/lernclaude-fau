@@ -423,6 +423,38 @@ def _medium_prompt(medium: str) -> str:
 # ----------------------------------------------------------------------------
 # prompt assembly
 # ----------------------------------------------------------------------------
+# A course that collects maths gaps from all other courses marks itself with
+# this file; the launcher finds it through the registry, never by a path.
+CATCHALL_INBOX = "luecken_eingang.md"
+
+
+def _catchall_workspace() -> "str | None":
+    """The first registered course carrying the catch-all inbox, or None."""
+    for ws in _load_registry()["workspaces"]:
+        if (Path(ws) / CATCHALL_INBOX).is_file():
+            return ws
+    return None
+
+
+def _catchall_brief() -> str:
+    """The one cross-course rule: a maths gap found anywhere goes to the
+    catch-all's inbox. Empty when no course is marked as catch-all."""
+    ws = _catchall_workspace()
+    if ws is None:
+        return ""
+    return (
+        "\n<mathe_luecken>\n"
+        f"Der Kurs {ws} sammelt Mathe-Lücken aus allen Kursen. Buchst du in einem "
+        "anderen Kurs ein Fehlermuster, das reines Rechenhandwerk ist (Potenzen, "
+        "Einheiten, Brüche, Umformen, Vorzeichen, Ableiten …) und kein Fachstoff, "
+        f"häng eine Zeile an {Path(ws) / CATCHALL_INBOX} an, im Format, das oben in "
+        "der Datei steht. Nur anhängen, nichts darin ändern. Der eigene Kurs übt "
+        "die Lücke bis zu seiner Klausur trotzdem selbst. Bist du im Kurs selbst, "
+        "gilt dessen CLAUDE.md.\n"
+        "</mathe_luecken>\n"
+    )
+
+
 def _prompt_common() -> str:
     """The launcher-owned orientation every session gets: the active medium and
     its mechanics, the no-LaTeX terminal rule, and today's date."""
@@ -446,6 +478,7 @@ def _prompt_common() -> str:
         "</orientierung>\n\n"
         f"<heute>\n# Heute: {today}\n</heute>\n"
     )
+    text += _catchall_brief()
     mechanics = _medium_prompt(medium)
     if mechanics:
         text += f'\n<medium_mechanik name="{medium}">\n{mechanics}</medium_mechanik>\n'
