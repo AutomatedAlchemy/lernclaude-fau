@@ -24,10 +24,15 @@ beschrieben oder behoben, nicht hier umschifft.
 
 ## Struktur (verbindlich)
 
-- **Tab 0 = „Übersicht"** — die Kursübersicht (§Kursübersicht der Kurs-CLAUDE.md)
-  samt Fortschrittsspiegel, siehe den Abschnitt unten. Re-Entry-Punkt des Boards
-  und Spiegel von `todo.md`/`fehlermuster.md`, nicht deren Ersatz. Fehlt der Tab,
-  **jetzt** anlegen und an Position 0 holen.
+- **Tab 0 = „Übersicht"** — die Kursübersicht (§Kursübersicht der Kurs-CLAUDE.md),
+  siehe den Abschnitt unten. Fehlt der Tab, **jetzt** anlegen und an Position 0 holen.
+- **Angepinnt: „Fortschritt"** — kurzer Spiegel von `todo.md`/`fehlermuster.md`,
+  nicht deren Ersatz, siehe §„Fortschritt". Angepinnte Tabs stehen rechts in der
+  Leiste und bleiben sichtbar, wie lang die Leiste auch wird. Fehlt der Tab, **jetzt**
+  mit `create_tab(pinned: true, select: false)` anlegen.
+- **Angepinnt: „Hilfsmittel"** — nur wenn die Klausur Hilfsmittel erlaubt, siehe
+  §„Hilfsmittel".
+- **Sonst wird nichts angepinnt.** Häppchen und Quiz nie.
 - **Jeder weitere Tab = genau EIN Häppchen.** Titel kurz und referenzierbar
   (`H03 …`); der ganze Satz gehört in die Tab-Beschreibung.
 - **Quiz-Häppchen** als eigener Tab (`Q01 <Thema>`), eine Frage pro Block,
@@ -60,20 +65,16 @@ beschrieben oder behoben, nicht hier umschifft.
 ## Kursübersicht (Tab 0)
 
 Tab 0 ist der eine Übersichts-Tab des Kurses — der Vertrag aus §Kursübersicht der
-Kurs-CLAUDE.md und der Fortschrittsspiegel in einem. Reihenfolge der Blöcke:
+Kurs-CLAUDE.md. Der Fortschritt steht im angepinnten Tab „Fortschritt". Reihenfolge
+der Blöcke:
 
 1. **Prüfung** — Eckdaten, Format, Bestehen.
-2. **Themenkarte mit Fortschritt** — als Tabelle, je Thema eine Anzeige
-   (🔴/🟠/🟡/🟢 oder `▓▓▓░░`, mit Legende) und die zugehörigen Häppchen namentlich
-   („→ H03 …"); darunter die offenen Fehlermuster in je einem Satz und die Zeile
-   `Fortschritt: x/y Häppchen`. Dieser Block wird nach jedem Review per
-   `update_block` nachgezogen.
-3. **Themen erklärt** — je Thema Idee, Prüfungsanforderung, Notation, Falle,
+2. **Themen erklärt** — je Thema Idee, Prüfungsanforderung, Notation, Falle,
    Material, höchstens 6 Sätze. Formeln in `markdown`-Blöcke.
-4. **Materialien** — jede Datei mit Pfad und einem Halbsatz beschrieben. Fotos
+3. **Materialien** — jede Datei mit Pfad und einem Halbsatz beschrieben. Fotos
    als Bild-Block, einzelne PDF-Seiten nur situativ im Häppchen, das sie braucht
    (als PNG gerendert), nie ganze Skripte.
-5. **Vereinbarung** — drin / nicht drin / offene Fragen. Darunter genau EIN
+4. **Vereinbarung** — drin / nicht drin / offene Fragen. Darunter genau EIN
    `submit`-Knopf („Gelesen & einverstanden"); sonst **keine Eingabefelder** im Tab.
 
 Bestätigung: auf den Klick warten (§„Auf den User warten"); sagt der User es
@@ -87,7 +88,41 @@ setzt das ganze Board zurück. `clear_board` nur für ein leeres oder für ein
 falsch aufgebautes Board.
 
 Nachziehen bei einem Board, dessen Tab 0 bisher nur der Fortschrittsspiegel war:
-die fehlenden Blöcke ergänzen und in die Reihenfolge oben bringen.
+die fehlenden Blöcke ergänzen und in die Reihenfolge oben bringen. Trägt Tab 0 noch
+eine Themenkarte mit Fortschritt, wandert sie in den Tab „Fortschritt" und wird aus
+Tab 0 mit `remove_block` entfernt.
+
+## Fortschritt (angepinnt)
+
+So kurz, dass er ohne Scrollen passt. Genau diese Blöcke, sonst nichts:
+
+1. Eine Tabelle `Thema | Stand | Häppchen`: je Zeile der Themenkarte eine Ampel
+   (🔴/🟡/🟢) und die zugehörigen Häppchen als Kürzel (`H03`). Die Legende passt
+   in eine Zeile darunter.
+2. Die höchstens drei obersten offenen Muster aus `fehlermuster.md`, je eine Zeile.
+3. Die Zeile `Fortschritt: x/y Häppchen`.
+
+Keine Eingabefelder, keine Erklärungen, keine Bilder. Nach jedem Review und beim
+Anlegen eines Häppchens per `update_block` nachziehen, ohne `select_tab`.
+
+## Hilfsmittel (angepinnt)
+
+Der Tab zeigt genau das, was in der Klausur auf dem Tisch liegt, damit mit
+denselben Hilfsmitteln geübt wird. Ob es ihn gibt, sagt das Feld `Hilfsmittel` der
+Eckdaten:
+
+- **Eigenes Blatt erlaubt** (z.B. handschriftliche A4-Seiten): der Tab spiegelt das
+  Mitnehm-Blatt des Kurses (Ort laut Kurs-CLAUDE.md). Die Datei bleibt die Quelle;
+  eine Änderung kommt erst in die Datei, dann auf den Tab.
+- **Ausgeteilte Unterlage** (Formelsammlung, Periodensystem, Tabelle): der Tab
+  enthält genau diese, als Bild oder Markdown.
+- **Keine Hilfsmittel**: kein Tab. Ein ständig sichtbarer Spickzettel würde das
+  Üben von „welche Formel wann" aushebeln.
+- **Noch offen**: kein Tab, bis es feststeht.
+
+Keine Eingabefelder. Änderungen an Ort und Stelle per `update_block`/`append_blocks`,
+ohne `select_tab`. Eine Korrektur darf auf den Tab verweisen („steht in
+*Hilfsmittel*"), statt die Formel zu wiederholen.
 
 ## Häppchen übergeben und einsammeln
 
@@ -96,7 +131,7 @@ die fehlenden Blöcke ergänzen und in die Reihenfolge oben bringen.
   Tab ungerechnet, wird er wieder vorgelegt (§Ankommen), nicht durch einen neuen
   ersetzt. (EP2 2026: drei offene Tabs nebeneinander, eines davon drei Tage
   ungerechnet; User: „räum die Tabs mal auf".)
-- Bauen mit `create_tab(select: false)`, in der Übersicht eintragen, **dann erst**
+- Bauen mit `create_tab(select: false)`, im Fortschritt eintragen, **dann erst**
   `select_tab` — den User nie mitten im Rechnen wegreißen.
 - Danach auf die Abgabe warten, siehe §„Auf den User warten".
 
@@ -140,10 +175,11 @@ Gilt für jeden Wait: Übersichts-Bestätigung, Häppchen-Abgabe, „Noch eins?"
   unter der Aufgabe.
 - Ist der Score falsch, weil der Schlüssel falsch war, das auf dem Board
   richtigstellen und dem User sagen.
-- Danach die Übersicht per `update_block` nachziehen (Themen-Level,
-  Häppchen-Status, `Fortschritt:`-Zeile). Fertig reviewte Tabs **bleiben auf der
+- Danach den Tab „Fortschritt" per `update_block` nachziehen (Ampeln,
+  Häppchen, offene Muster, `Fortschritt:`-Zeile), bei erlaubten Hilfsmitteln auch
+  den Tab „Hilfsmittel". Fertig reviewte Tabs **bleiben auf der
   Leiste**, samt Korrektur: der User will sie weiter sehen. Archivieren nur auf
-  ausdrückliche Bitte; der Eintrag in der Übersicht bleibt in jedem Fall.
+  ausdrückliche Bitte; der Eintrag im Fortschritt bleibt in jedem Fall.
 
 ## Erklär-Clip zu jedem Häppchen (Nutzervorgabe 17.09.2026)
 
@@ -153,7 +189,7 @@ Konvergenz, eine Skizze, die entsteht. Trägt er sie, wird er gebaut, **während
 den Tab schon bearbeitet**, und als Video-Block unten an denselben Tab gehängt. Reine
 Wiedererkennung (Listen, Begriffspaare, Ankreuz-Drills) bekommt keinen Clip.
 
-- **Reihenfolge:** Tab bauen, in der Übersicht eintragen, `select_tab` — **dann** den
+- **Reihenfolge:** Tab bauen, im Fortschritt eintragen, `select_tab` — **dann** den
   Clip anstoßen. Der User wartet nie auf einen Render.
 - **Per Opus-Subagent, nicht im eigenen Kontext** (Token-Sparsamkeit): `Agent` mit
   `model: opus`, Auftrag = Skill `manim-kit` laden, eine Szene, 15–25 s, eine Idee,
@@ -172,7 +208,7 @@ Wiedererkennung (Listen, Begriffspaare, Ankreuz-Drills) bekommt keinen Clip.
   und hängt es als Video-Block unten an denselben Tab.
 - **Fail into silence:** scheitert der Render, bleibt es beim Textblock; kein Hinweis an
   den User, keine zweite Runde. `manim-kit doctor` einmal pro Host.
-- **Nie in die Übersicht.** Ein Clip an einer Korrektur (wiederkehrendes, geometrisches
+- **Nie in die Übersicht und nie in angepinnte Tabs.** Ein Clip an einer Korrektur (wiederkehrendes, geometrisches
   Fehlermuster) bleibt zusätzlich erlaubt, gleiche Mechanik.
 
 ## „Noch eins?“ (Quickie)
